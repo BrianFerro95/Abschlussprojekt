@@ -1,4 +1,4 @@
-# 🏡 Nachbarschaftshilfe Plattform - Backend
+# 🏡 Nachbarschaftshilfe Plattform 
 Fullstack-Projekt im Rahmen des DCI-Abschlussprojekts
 Backend-Teil (Node.js, Express, MongoDB, Mongoose, ESM)
 
