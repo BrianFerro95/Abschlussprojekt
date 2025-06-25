@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/userSchema.js";
 import { sendVerificationEmail } from "../utils/emailService.js";
 import { protect } from "../middleware/authMiddleware.js"; // Middleware für geschützte Routen
+import fetch from 'node-fetch';
 
 const router = express.Router();
 
@@ -13,9 +14,26 @@ const router = express.Router();
  * - Setzt den ersten User als Admin
  * - Sendet eine Verifizierungs-E-Mail
  */
+
+// Funktion zur Adresse-Validierung mit Google Maps API
+const validateAddress = async (adress) => {
+  const { street, city, state, zip } = adress;
+  const addressString = `${street}, ${city}, ${state} ${zip}`;
+  const API_KEY = process.env.GOOGLE_MAPS_API_KEY; // in deiner .env setzen
+
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addressString)}&key=${API_KEY}`;
+  const response = await fetch(url);
+  const data = await response.json();
+
+  if (data.status !== 'OK' || data.results.length === 0) {
+    return false; // Adresse ist ungültig
+  }
+  return true;
+};
+
 router.post('/register', async (req, res) => {
     try {
-        const { nickname, email, password, adress } = req.body;
+        const { nickname, email, password, firstName, lastName, adress } = req.body;
 
         // Prüfen, ob Nickname oder E-Mail schon vergeben sind
         const existingUser = await User.findOne({ $or: [{ email }, { nickname }] });
@@ -34,6 +52,8 @@ router.post('/register', async (req, res) => {
             nickname,
             email,
             password,
+            firstName,
+            lastName,
             adress,
             isVerify: false, // User ist anfangs nicht verifiziert
             verificationCode,

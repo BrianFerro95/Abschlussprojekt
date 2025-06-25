@@ -26,7 +26,10 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 
 // Middleware für CORS (Cross-Origin Resource Sharing)
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173', // oder die Adresse deines Frontend-Servers
+  credentials: true, // damit Cookies (JWT im Cookie) geschickt werden
+}));
 
 // Middleware zum Parsen von JSON-Bodies
 app.use(express.json());
@@ -44,7 +47,7 @@ app.use('/api/test-email', testEmailRoutes);
 app.use('/api', verifyRoutes);
 
 // User-Routen (z.B. /api/users/me, /api/users/:id)
-app.use('/api', userRoutes);
+app.use('/api/users', userRoutes);
 
 // Blog-Routen (z.B. /api/blog)
 app.use('/api/blogs', blogRoutes);
