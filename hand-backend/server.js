@@ -1,79 +1,118 @@
+// server.js - Saubere Version mit allen Imports oben
 import dotenv from "dotenv";
+import { fileURLToPath } from 'url';
+import path from 'path';
+// Dotenv zuerst laden
+dotenv.config();
+
+// // Debug: Überprüfe ob .env geladen wurde
+// console.log('🔧 .env loaded - MONGODB_URI exists:', !!process.env.MONGODB_URI);
+// console.log('🔧 PORT:', process.env.PORT);
+
+// SOFORT dotenv laden - vor allen anderen Imports
+dotenv.config();
+
+// Alle Standard-Imports
 import express from "express";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
+import mongoose from 'mongoose';
 
+// Alle Route-Imports 
 import connectDB from './database/database.js';
 import authRoutes from './routes/authRoutes.js';
 import verifyRoutes from './routes/verifyRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import profileRoutes from './routes/profileRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
+import blogCommentRoutes from './routes/blogCommentRoutes.js';
 import adRoutes from './routes/adRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
 import commentRoutes from './routes/commentRoutes.js';
 import adressRoutes from './routes/adressRoutes.js';
-import testEmailRoutes from './routes/testEmailRoutes.js'
 import postRoutes from './routes/postRoutes.js';
+import passwordResetRequestRoute from './routes/passwordResetRequestRoute.js';
+import passwordResetRoutes from './routes/passwordResetRoute.js';
+import publicUserRoutes from './routes/publicUserRoutes.js';
+import exchangeRoutes from './routes/exchangeRoutes.js';
+import helpQuestionRoutes from './routes/helpQuestionRoutes.js';
+import helpAnswerRoutes from './routes/helpAnswerRoutes.js';
+
+// ES6 Module __dirname workaround
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Debug Environment Variables
+console.log('🔍 Environment Variables Status:');
+console.log('MONGO_URI exists:', !!process.env.MONGO_URI);
+console.log('MONGO_URI value:', process.env.MONGO_URI ? 'Set' : 'NOT SET');
+console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+console.log('PORT:', process.env.PORT);
 
 
-// Lade Umgebungsvariablen aus .env-Datei
-dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Stelle Verbindung zur Datenbank her
 connectDB();
 
-// Middleware für CORS (Cross-Origin Resource Sharing)
-app.use(cors({
-  origin: 'http://localhost:5173', // oder die Adresse deines Frontend-Servers
-  credentials: true, // damit Cookies (JWT im Cookie) geschickt werden
-}));
+// Mongoose Debug-Modus aktivieren
+// mongoose.set('debug', true);
 
-// Middleware zum Parsen von JSON-Bodies
+// Middleware
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // Hier nur dein Frontend erlauben
+    credentials: true, // falls du Cookies oder auth Header benutzt
+    optionsSuccessStatus: 200 // für ältere Browser
+  })
+);
 app.use(express.json());
-
-// Middleware zum Parsen von Cookies
 app.use(cookieParser());
 
-// Authentifizierungs-Routen (Registrierung, Login, Verifizierung)
+// Request-Logging
+app.use((req, res, next) => {
+  console.log(`📥 ${req.method} ${req.url}`);
+  console.log('📋 Body:', req.body);
+  next();
+});
+
+// Debug: Log alle eingehenden Requests
+app.use((req, res, next) => {
+    console.log(`📥 ${req.method} ${req.path}`, req.body);
+    next();
+});
+
+// Authentifizierungs-/Login-/Passwort-Routen
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', verifyRoutes);
+app.use('/api/auth', passwordResetRequestRoute);
+app.use('/api/auth', passwordResetRoutes);
 
-// Test-Route zum Versenden von E-Mails
-app.use('/api/test-email', testEmailRoutes);
 
-// Verifizierungs-Routen (z.B. /api/auth/verify)
-app.use('/api', verifyRoutes);
-
-// User-Routen (z.B. /api/users/me, /api/users/:id)
-app.use('/api/users', userRoutes);
-
-// Blog-Routen (z.B. /api/blog)
-app.use('/api/blogs', blogRoutes);
-
-// Kleinanzeigen-Routen (z.B. /api/ads)
-app.use('/api/ads', adRoutes);
-
-// Event-Routen (z.B. /api/events)
-app.use('/api/events', eventRoutes);
-
-// Kommentar-Routen (z.B. /api/comments)
-app.use('/api/comments', commentRoutes);
-
-// Adress-Routen (z.B. /api/users/me/adress)
+// User-Routen
+app.use('/api', publicUserRoutes);
+app.use('/api', profileRoutes);
 app.use('/api', adressRoutes);
 
-// Post-Routen (z.B. /api/posts)
+// Content-Routen
+app.use('/api/blogs', blogRoutes);
+app.use('/api', blogCommentRoutes);
+app.use('/api/ads', adRoutes);
+app.use('/api/events', eventRoutes);
 app.use('/api/posts', postRoutes);
+app.use('/api/comments', commentRoutes);
+app.use('/api/exchange', exchangeRoutes);
+app.use('/api/help', helpQuestionRoutes);
+app.use('/api/help/answer', helpAnswerRoutes);
 
-// Root-Route (Startseite)
 app.get('/', (req, res) => {
   res.send('Willkommen im "Hand in Hand"-Backend!');
 });
 
 // Starte den Server
 app.listen(PORT, () => {
-  console.log(`Server läuft auf http://localhost:${PORT}`);
+  console.log(`🚀 Server läuft auf http://localhost:${PORT}`);
 });
 

@@ -1,8 +1,7 @@
-// context/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-const AuthContext = createContext();
+export const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -11,31 +10,25 @@ export const useAuth = () => {
   }
   return context;
 };
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
   // API Base URL
   const API_URL = import.meta.env.VITE_API_URL;
-
   // Set axios default base URL
   axios.defaults.baseURL = API_URL;
-
   // Check if user is logged in on app start
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
       // Set token in axios headers
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
       // Verify token and get user info
       fetchUser();
     } else {
       setLoading(false);
     }
   }, []);
-
   const fetchUser = async () => {
     try {
       const response = await axios.get('/users/profile');
@@ -47,16 +40,13 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   };
-
   const login = async (email, password) => {
     try {
       const response = await axios.post('/auth/login', { email, password });
       const { token, user } = response.data;
-      
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
-      
       return { success: true };
     } catch (error) {
       return {
@@ -65,16 +55,13 @@ export const AuthProvider = ({ children }) => {
       };
     }
   };
-
   const register = async (userData) => {
     try {
       const response = await axios.post('/auth/register', userData);
       const { token, user } = response.data;
-      
       localStorage.setItem('token', token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(user);
-      
       return { success: true };
     } catch (error) {
       return {
@@ -83,13 +70,11 @@ export const AuthProvider = ({ children }) => {
       };
     }
   };
-
   const logout = () => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
   };
-
   const value = {
     user,
     login,
@@ -97,11 +82,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading
   };
-
   return (
     <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 };
-

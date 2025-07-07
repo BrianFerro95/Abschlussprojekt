@@ -2,185 +2,357 @@ import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/userSchema.js";
 import { sendVerificationEmail } from "../utils/emailService.js";
-import { protect } from "../middleware/authMiddleware.js"; // Middleware für geschützte Routen
-import fetch from 'node-fetch';
+import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 /**
- * Registrierung eines neuen Users
- * - Prüft, ob Nickname oder E-Mail bereits vergeben sind
- * - Generiert einen Verifizierungscode
- * - Setzt den ersten User als Admin
- * - Sendet eine Verifizierungs-E-Mail
+ * Optionale Adress-Validierung mit Google Maps API
+ * Funktioniert nur, wenn GOOGLE_MAPS_API_KEY in .env gesetzt ist
  */
-
-// Funktion zur Adresse-Validierung mit Google Maps API
-const validateAddress = async (adress) => {
-  const { street, city, state, zip } = adress;
-  const addressString = `${street}, ${city}, ${state} ${zip}`;
-  const API_KEY = process.env.GOOGLE_MAPS_API_KEY; // in deiner .env setzen
-
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addressString)}&key=${API_KEY}`;
-  const response = await fetch(url);
-  const data = await response.json();
-
-  if (data.status !== 'OK' || data.results.length === 0) {
-    return false; // Adresse ist ungültig
-  }
-  return true;
+const validateAddress = async (address) => {
+    if (!process.env.GOOGLE_MAPS_API_KEY) {
+        console.log('Google Maps API Key nicht gefunden - Adress-Validierung übersprungen');
+        return true;
+    }
+    try {
+        const fetch = await import('node-fetch').then(module => module.default);
+        const { street, city, district, zipCode } = address;
+        const addressString = `${street}, ${city}, ${district} ${zipCode}`;
+        const API_KEY = process.env.GOOGLE_MAPS_API_KEY;
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addressString)}&key=${API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.status !== 'OK' || data.results.length === 0) {
+            return false;
+        }
+        return true;
+    } catch (error) {
+        console.log('Adress-Validierung übersprungen:', error.message);
+        return true;
+    }
 };
 
+/**
+ * Registrierung eines neuen Users
+ */
 router.post('/register', async (req, res) => {
-    try {
-        const { nickname, email, password, firstName, lastName, adress } = req.body;
+  try {
+    const {
+      nickname,
+      email,
+      password,
+      firstName,
+      lastName,
+      adress // oder addresses, je nach Modell
+    } = req.body;
 
-        // Prüfen, ob Nickname oder E-Mail schon vergeben sind
-        const existingUser = await User.findOne({ $or: [{ email }, { nickname }] });
-        if (existingUser) {
-            return res.status(400).json({ message: 'E-Mail oder Nickname bereits vergeben' });
-        }
+    // Prüfe ob User bereits existiert
+    const existingUser = await User.findOne({
+      $or: [{ email }, { nickname }, { username: nickname }]
+    });
 
-        // Prüfen, ob schon ein Admin existiert (erster User wird Admin)
-        const adminExists = await User.findOne({ isAdmin: true });
-
-        // Verifizierungscode generieren (6-stellig, als String)
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // Neuen User anlegen
-        const newUser = new User({
-            nickname,
-            email,
-            password,
-            firstName,
-            lastName,
-            adress,
-            isVerify: false, // User ist anfangs nicht verifiziert
-            verificationCode,
-            isAdmin: !adminExists, // Erster User wird Admin
-        });
-        await newUser.save();
-
-        // Verifizierungs-E-Mail senden
-        await sendVerificationEmail(newUser.email, newUser.verificationCode, newUser._id);
-
-        // Erfolgreiche Registrierung
-        res.status(201).json({
-            message: 'User erfolgreich erstellt',
-            _id: newUser._id,
-            nickname: newUser.nickname,
-            email: newUser.email,
-            adress: newUser.adress,
-            isAdmin: newUser.isAdmin,
-            isVerify: newUser.isVerify
-        });
-    } catch (error) {
-        console.error('Register error:', error);
-        res.status(500).json({ message: 'Serverfehler' });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'E-Mail oder Nickname bereits registriert'
+      });
     }
+
+    // Verifizierungstoken generieren
+    const verificationToken = jwt.sign(
+      { email, nickname },
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // User erstellen
+    const user = new User({
+      username: nickname,
+      nickname: nickname,
+      email: email,
+      password: password,
+      firstName: firstName,
+      lastName: lastName,
+      address: adress ? {
+        street: adress.street,
+        city: adress.city,
+        zip: adress.zip?.toString(),
+        district: adress.district,
+        state: adress.state
+      } : undefined,
+      isVerified: false,
+      verificationToken: verificationToken,
+      verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
+      registeredAt: new Date()
+    });
+
+    await user.save();
+
+    // E-Mail-Versand
+    try {
+      await sendVerificationEmail(email, verificationToken);
+    } catch (emailError) {
+      console.error('❌ E-Mail-Service Fehler:', emailError);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: 'Registrierung erfolgreich! Prüfen Sie die Backend-Console für den Verifizierungslink.',
+      verificationToken: verificationToken, // Nur für Development!
+      user: {
+        id: user._id,
+        username: user.username,
+        nickname: user.nickname,
+        email: user.email,
+        isVerified: user.isVerified
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Register error:', error);
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Fehler bei der Registrierung'
+    });
+  }
 });
 
 /**
  * Login eines Users
- * - Authentifiziert mit Nickname und Passwort
- * - Gibt bei Erfolg ein JWT-Token als httpOnly-Cookie zurück
  */
-router.post('/login', async (req, res) => {
-    try {
-        const { nickname, password } = req.body;
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password, rememberMe } = req.body;
+    const user = await User.findOne({ email });
 
-        // User anhand des Nicknames suchen
-        const user = await User.findOne({ nickname });
-        if (!user ){ 
-            return res.status(404).json({ message: 'User nicht gefunden' });
-        }
-
-        // Passwort prüfen
-        const isMatch = await user.matchPassword(password);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'Ungültige Anmeldedaten' });
-        }
-
-        // JWT-Token erstellen
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-
-        // Token als httpOnly-Cookie setzen
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production', // in Produktion nur über HTTPS
-            sameSite: 'strict',
-            maxAge: 30 * 24 * 60 * 60 * 1000 // 30 Tage
-        });
-
-        // Erfolgreiche Anmeldung, Userdaten und Token zurückgeben
-        res.json({
-            message: 'Login erfolgreich',
-            token,
-            _id: user._id,
-            nickname: user.nickname,
-            email: user.email,
-            adress: user.adress,
-            isAdmin: user.isAdmin,
-            isActive: user.isActive, // Stelle sicher, dass dieses Feld im Model existiert
-        });
-    } catch (error) {
-        console.error('Login error:', error);
-        res.status(500).json({ message: 'Serverfehler' });
+    if (!user) {
+      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
     }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
+    }
+
+    // Prüfe E-Mail-Verifizierung
+    if (!user.isVerified) {
+      return res.status(401).json({ 
+        message: "Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse",
+        requiresVerification: true,
+        email: user.email
+      });
+    }
+
+    // Token generieren
+    const expiresIn = rememberMe ? "30d" : "1d";
+    const token = jwt.sign(
+      { 
+        id: user._id,
+        _id: user._id,
+        nickname: user.nickname
+      }, 
+      process.env.JWT_SECRET, 
+      { expiresIn }
+    );
+
+    res.json({
+      message: "Login erfolgreich",
+      token,
+      user: {
+        _id: user._id,
+        nickname: user.nickname,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        address: user.address,
+        isVerified: user.isVerified
+      },
+    });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ message: "Serverfehler" });
+  }
+});
+
+/**
+ * E-Mail-Verifizierung über Token-Link
+ */
+router.get('/verify/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    console.log('🔍 Verifizierung gestartet für Token:', token);
+
+    // Token suchen und prüfen
+    const user = await User.findOne({
+      verificationToken: token,
+      verificationTokenExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      console.log('❌ Ungültiger oder abgelaufener Token');
+      return res.status(400).json({
+        success: false,
+        message: 'Ungültiger oder abgelaufener Verifizierungstoken'
+      });
+    }
+
+    console.log('👤 User gefunden:', user.email);
+
+    // Prüfe ob es ein neuer User ist
+    const isNewUser = !user.firstVerifiedAt;
+    console.log('🆕 Ist neuer User:', isNewUser);
+    console.log('✅ War bereits verifiziert:', user.isVerified);
+
+    // User verifizieren
+    if (!user.firstVerifiedAt) {
+      user.firstVerifiedAt = new Date();
+      console.log('📅 FirstVerifiedAt gesetzt:', user.firstVerifiedAt);
+    }
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+
+    await user.save();
+    console.log('💾 User gespeichert');
+
+    // JWT Token für Login generieren
+    const jwtToken = jwt.sign(
+      { 
+        id: user._id,
+        _id: user._id,
+        nickname: user.nickname
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    console.log('🎫 JWT Token generiert');
+
+    console.log('✅ Verifizierung erfolgreich abgeschlossen');
+
+    res.status(200).json({
+      success: true,
+      message: isNewUser 
+        ? 'E-Mail erfolgreich verifiziert! Bitte loggen Sie sich ein.'
+        : 'E-Mail erfolgreich bestätigt!',
+      isNewUser,
+      user: {
+        id: user._id,
+        nickname: user.nickname,
+        email: user.email,
+        isVerified: user.isVerified
+      },
+      token: jwtToken
+    });
+
+  } catch (error) {
+    console.error('❌ Verifizierungsfehler:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Serverfehler bei der Verifizierung'
+    });
+  }
 });
 
 /**
  * Eigene Userdaten abrufen (geschützt)
- * - Gibt die im Token gespeicherten Userdaten zurück
  */
 router.get("/users/me", protect, async (req, res) => {
-  res.json(req.user);
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+        console.log('👤 COMPLETE USER from DB:', JSON.stringify(user, null, 2));
+        console.log('🏠 ADDRESS from DB:', user?.address);
+        console.log('🔍 ZIP from DB:', user?.address?.zip);
+        
+        if (!user) {
+            return res.status(404).json({ message: "User nicht gefunden" });
+        }
+        res.json(user);
+    } catch (error) {
+        console.error('❌ Get user error:', error);
+        res.status(500).json({ message: "Serverfehler", error: error.message });
+    }
+});
+
+/**
+ * Eigene Userdaten aktualisieren (geschützt)
+ */
+router.put("/users/me", protect, async (req, res) => {
+    try {
+        const user = await User.findByIdAndUpdate(req.user._id, req.body, {
+            new: true,
+        }).select("-password");
+
+        if (!user) {
+            return res.status(404).json({ message: "User nicht gefunden" });
+        }
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Aktualisierung fehlgeschlagen", error: error.message });
+    }
 });
 
 /**
  * Userdaten aktualisieren (geschützt)
- * - Aktualisiert die Daten des Users mit der angegebenen ID
  */
 router.put("/users/:id", protect, async (req, res) => {
-  try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    }).select("-password");
-    if (!user) {
-      return res.status(404).json({ message: "User nicht gefunden" });
+    try {
+        const user = await User.findByIdAndUpdate(req.params.id, req.body, {
+            new: true,
+        }).select("-password");
+        if (!user) {
+            return res.status(404).json({ message: "User nicht gefunden" });
+        }
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Aktualisierung fehlgeschlagen", error: error.message });
     }
-    res.json(user);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Aktualisierung fehlgeschlagen", error: error.message });
-  }
 });
 
 /**
- * Verifizierungscode prüfen
- * - Setzt isVerify auf true, wenn der Code korrekt ist
+ * Alle User anzeigen (nur für Debug)
  */
-router.post("/verify", async (req, res) => {
-  try {
-    const { email, code } = req.body;
-    const user = await User.findOne({ email, verificationCode: code });
-
-    if (!user) {
-      return res.status(400).json({ message: "Ungültiger Code oder E-Mail" });
+router.get("/users", async (req, res) => {
+    try {
+        const users = await User.find({}).select('-password -verificationToken');
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: "Fehler beim Laden der User", error: error.message });
     }
+});
 
-    user.isVerify = true;
-    user.verificationCode = null;
-    await user.save();
+/**
+ * Passwort zurücksetzen (alternative Route für Team-Konsistenz)
+ */
+router.post("/reset-password", async (req, res) => {
+    try {
+        const { email, resetCode, newPassword } = req.body;
+        
+        // User finden und Code überprüfen
+        const user = await User.findOne({ 
+            email, 
+            resetCode,
+            resetCodeExpires: { $gt: Date.now() } // Code noch gültig
+        });
+        
+        if (!user) {
+            return res.status(400).json({ message: 'Ungültiger oder abgelaufener Code' });
+        }
 
-    res.json({ message: "E-Mail erfolgreich verifiziert" });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Verifizierung fehlgeschlagen", error: error.message });
-  }
+        // Neues Passwort setzen (wird automatisch gehashed durch das User-Schema)
+        user.password = newPassword;
+        user.resetCode = null;
+        user.resetCodeExpires = null;
+        await user.save();
+
+        res.json({ 
+            message: 'Passwort erfolgreich zurückgesetzt'
+        });
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Serverfehler beim Passwort zurücksetzen' });
+    }
 });
 
 export default router;
-
