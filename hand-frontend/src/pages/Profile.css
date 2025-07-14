@@ -263,6 +263,161 @@
   display: flex;
   align-items: center;
 }
+/* Address Section Header */
+.addresses-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.01rem;
+}
+
+.btn-add-address {
+  background-color: var(--mint);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  padding: 0.75rem 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.btn-add-address:hover {
+  background-color: var(--coral);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(5, 0, 78, 0.2);
+}
+
+/* Address Container */
+.addresses-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Address Card */
+.address-card {
+  background: linear-gradient(135deg, var(--cream) 0%, rgba(248, 232, 195, 0.5) 100%);
+  border: 2px solid var(--mint);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.address-card:hover {
+  box-shadow: 0 4px 12px rgba(46, 126, 179, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Address Card Header */
+.address-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--mint);
+}
+
+.address-title-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.address-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--deepBlue);
+}
+
+.address-title.primary {
+  color: var(--skyBlue);
+}
+
+.primary-indicator {
+  background: linear-gradient(135deg, var(--mint) 0%, var(--skyBlue) 100%);
+  color: var(--deepBlue);
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(79, 227, 193, 0.3);
+}
+
+/* Address Controls */
+.address-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-primary-toggle {
+  background-color: var(--mint);
+  color: var(--deepBlue);
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary-toggle:hover {
+  background-color: var(--skyBlue);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-address-remove {
+  background: transparent;
+  border: 2px solid var(--coral);
+  color: var(--coral);
+  padding: 0.3rem 0.6rem;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.btn-address-remove:hover:not(:disabled) {
+  background-color: var(--coral);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-address-remove:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Address Fields */
+.address-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.address-card .input-container input,
+.address-card .input-display {
+  padding-left: 0.75rem;
+  background-color: white;
+  border: 1px solid var(--mint);
+}
+
+.address-card .input-container input:focus {
+  border-color: var(--skyBlue);
+  box-shadow: 0 0 0 2px rgba(46, 126, 179, 0.1);
+}
 
 /* Responsive Design */
 @media (max-width: 1024px) {
@@ -273,6 +428,16 @@
   
   .profile-image-section {
     order: -1;
+  }
+  
+  .addresses-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .btn-add-address {
+    justify-content: center;
   }
 }
 
@@ -316,6 +481,21 @@
   .default-avatar {
     font-size: 3rem;
   }
+  
+  .address-card {
+    padding: 1rem;
+  }
+  
+  .address-card-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .address-controls {
+    width: 100%;
+    justify-content: flex-end;
+  }
 }
 
 @media (max-width: 480px) {
@@ -329,5 +509,11 @@
   
   .profile-username {
     font-size: 1rem;
+  }
+  
+  .address-title-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 }

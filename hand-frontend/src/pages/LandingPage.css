@@ -76,6 +76,7 @@ section {
     gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 5rem;
+  width: 100%;
  
 }
 
@@ -87,8 +88,9 @@ section {
   font-weight: 600;
   text-decoration: none;
   text-align: center;
-  min-width: 140px;
+  min-width: 50px;
   border-radius: 50px;
+  max-width: 70px;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -133,6 +135,7 @@ section {
   .landing-content h1 {
     font-size: 2rem;
   }
+}
 
   .landing-content p {
     font-size: 1rem;
@@ -150,9 +153,8 @@ section {
     max-width: 300px;
     align-content: center;
   }
-        .btn.primary, .btn.secondary {
-            min-width: 100%;
-        }
+    .btn.primary, .btn.secondary {
+        min-width: 100%;
     }
 
 /* Footer */
@@ -186,10 +188,18 @@ body {
   color: var(--text-color);
 }
 
+section {
+  padding: 2rem;
+  margin: 0 auto;
+  max-width: 1200px;
+  box-sizing: border-box;
+}
+
 .landing-container {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   min-height: 100vh;
   width: 100%;
   box-sizing: border-box;
@@ -204,6 +214,27 @@ body {
   padding: 1rem;
 }
 
+.landing-content h1 {
+  font-size: 3rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  transition: color 0.4s ease;
+}
+
+.landing-content h1:hover {
+  color: var(--skyBlue);
+}
+
+.landing-content p {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+  transition: color 0.4s ease;
+}
+
+.landing-content p:hover {
+  color: var(--skyBlue);
+}
+
 /* ====== Buttons ====== */
 .cta-buttons {
   display: flex;
@@ -214,17 +245,19 @@ body {
 }
 
 .btn {
-  font-family: inherit;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
+  font-family: "Nunito", sans-serif;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-decoration: none;
+  text-align: center;
+  min-width: 50px;
+  max-width: 70px;
   border-radius: 50px;
-  border: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 140px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
 }
 
 .btn.primary {
@@ -250,77 +283,7 @@ body {
   border-color: var(--deepBlue);
 }
 
-/* ====== Footer ====== */
-.app-footer {
-  background-color: var(--coral);
-  color: var(--deepBlue);
-  text-align: center;
-  padding: 20x 0;
-  font-family: inherit;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-top: 30px;
-  margin-bottom: 0;
-  margin-right: -50vw;
-  width: 100vw;
-  max-width: 100vw;
-  box-sizing: border-box;
-}
 
-.footer-content {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 0 2rem;
-}
-
-.footer-links {
-  display: flex;
-  justify-content: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-
-.footer-links a {
-  color: #fff;
-  text-decoration: none;
-  font-size: 1rem;
-  transition: color 0.3s;
-}
-
-.footer-links a:hover {
-  color: var(--deepBlue);
-}
-
-.footer-content p {
-  margin-bottom: 1rem;
-  font-weight: 100;
-  font-size: 1rem;
-  color: rgba(255,255,255,0.7);
-  line-height: 1.5;
-}
-
-/* ====== Responsive ====== */
-@media (max-width: 900px) {
-  .footer-content { padding: 0 1rem; }
-}
-
-@media (max-width: 768px) {
-  .landing-content h1 { font-size: 2rem; }
-  .landing-content p { font-size: 1rem; }
-  .cta-buttons { flex-direction: column; gap: 0.75rem; }
-  .btn { width: 100%; max-width: 300px; }
-  .app-footer { padding: 32px 0 16px 0; font-size: 0.95rem; }
-}
-
-@media (max-width: 600px) {
-  .footer-content { padding: 0 0.5rem; }
-  .footer-links { flex-direction: column; gap: 0.75rem; }
-  .footer-content p { font-size: 0.85rem; }
-  .app-footer { padding: 24px 0 8px 0; font-size: 0.9rem; }
-}
 
 /* ======Images ====== */
 img {
@@ -332,4 +295,47 @@ img {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.5 ease;
 
+}
+
+.frage-animation {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+/* ====== Footer ====== */
+.app-footer {
+  background-color: var(--coral);
+  color: var(--deepBlue);
+  text-align: center;
+  padding: 40px 0 20px 0;
+  position: relative;
+  font-family: "Nunito", sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ====== Responsive Design ====== */
+@media (max-width: 768px) {
+  .landing-content h1 {
+    font-size: 2rem;
+  }
+  .landing-content p {
+    font-size: 1rem;
+  }
+  .cta-buttons {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+  .btn {
+    width: 100%;
+    max-width: 300px;
+    align-content: center;
+  }
+  .btn.primary,
+  .btn.secondary {
+    min-width: 100%;
+  }
 }

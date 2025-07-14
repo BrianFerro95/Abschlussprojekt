@@ -1,6 +1,9 @@
+import LandingPage from './LandingPage';
+
 const Home = () => {
   return (
-    <div>Home</div>
-  )
-}
-export default Home
+    <LandingPage />
+  );
+};
+
+export default Home;

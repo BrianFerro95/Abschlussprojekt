@@ -16,27 +16,26 @@ dotenv.config();
 import express from "express";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
-import mongoose from 'mongoose';
+// import mongoose from 'mongoose';
 
 // Alle Route-Imports 
 import connectDB from './database/database.js';
 import authRoutes from './routes/authRoutes.js';
 import verifyRoutes from './routes/verifyRoutes.js';
-import userRoutes from './routes/userRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
 import blogRoutes from './routes/blogRoutes.js';
 import blogCommentRoutes from './routes/blogCommentRoutes.js';
 import adRoutes from './routes/adRoutes.js';
 import eventRoutes from './routes/eventRoutes.js';
-import commentRoutes from './routes/commentRoutes.js';
-import adressRoutes from './routes/adressRoutes.js';
+import eventCommentRoutes from './routes/eventCommentRoutes.js';
 import postRoutes from './routes/postRoutes.js';
 import passwordResetRequestRoute from './routes/passwordResetRequestRoute.js';
-import passwordResetRoutes from './routes/passwordResetRoute.js';
+import passwordResetRoute from './routes/passwordResetRoute.js';
 import publicUserRoutes from './routes/publicUserRoutes.js';
 import exchangeRoutes from './routes/exchangeRoutes.js';
 import helpQuestionRoutes from './routes/helpQuestionRoutes.js';
 import helpAnswerRoutes from './routes/helpAnswerRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // ES6 Module __dirname workaround
 const __filename = fileURLToPath(import.meta.url);
@@ -61,13 +60,7 @@ connectDB();
 // mongoose.set('debug', true);
 
 // Middleware
-app.use(
-  cors({
-    origin: 'http://localhost:5173', // Hier nur dein Frontend erlauben
-    credentials: true, // falls du Cookies oder auth Header benutzt
-    optionsSuccessStatus: 200 // für ältere Browser
-  })
-);
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
@@ -88,13 +81,13 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/auth', verifyRoutes);
 app.use('/api/auth', passwordResetRequestRoute);
-app.use('/api/auth', passwordResetRoutes);
+app.use('/api/auth', passwordResetRoute);
 
 
 // User-Routen
 app.use('/api', publicUserRoutes);
 app.use('/api', profileRoutes);
-app.use('/api', adressRoutes);
+app.use('/api', userRoutes);
 
 // Content-Routen
 app.use('/api/blogs', blogRoutes);
@@ -102,7 +95,7 @@ app.use('/api', blogCommentRoutes);
 app.use('/api/ads', adRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/posts', postRoutes);
-app.use('/api/comments', commentRoutes);
+app.use('/api/event-comments', eventCommentRoutes);
 app.use('/api/exchange', exchangeRoutes);
 app.use('/api/help', helpQuestionRoutes);
 app.use('/api/help/answer', helpAnswerRoutes);

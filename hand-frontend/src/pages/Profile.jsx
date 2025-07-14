@@ -1,56 +1,100 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './Profile.css';
 
 const Profile = () => {
-  const [profileData, setProfileData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({});
+  const [profileData, setProfileData] = useState({
+    username: 'max_mustermann',
+    email: 'max.mustermann@email.com',
+    password: '••••••••••',
+    firstName: 'Max',
+    lastName: 'Mustermann',
+    profileImage: null,
+    addresses: [
+      {
+        id: 1,
+        type: 'Hauptadresse',
+        district: 'München Nord',
+        city: 'München',
+        zip: '80331',
+        street: 'Musterstraße 123',
+        isPrimary: true
+      }
+    ]
+  });
 
-  // Daten bei Komponenteneinbau laden
-  useEffect(() => {
-    fetch('http://localhost:3000/api/users/me', {
-      credentials: 'include', // Cookies schicken
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('Fehler beim Laden der Daten');
-        return res.json();
-      })
-      .then(data => {
-        setProfileData(data);
-        setEditData({ ...data });
-      })
-      .catch(err => {
-        setError(err.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+  const [editData, setEditData] = useState({ ...profileData, addresses: [...profileData.addresses] });
 
-  // Zeige Lade-Indikator oder Fehler
-  if (loading) return <div>Laden...</div>;
-  if (error) return <div>Fehler: {error}</div>;
-  if (!profileData) return <div>Keine Daten vorhanden</div>;
-
-    const handleEdit = () => {
+  const handleEdit = () => {
     setIsEditing(true);
-    setEditData({ ...profileData });
+    setEditData({ 
+      ...profileData, 
+      addresses: profileData.addresses.map(addr => ({ ...addr }))
+    });
   };
 
   const handleSave = () => {
-    setProfileData({ ...editData });
+    setProfileData({ 
+      ...editData, 
+      addresses: editData.addresses.map(addr => ({ ...addr }))
+    });
     setIsEditing(false);
   };
 
   const handleCancel = () => {
-    setEditData({ ...profileData });
+    setEditData({ 
+      ...profileData, 
+      addresses: profileData.addresses.map(addr => ({ ...addr }))
+    });
     setIsEditing(false);
   };
 
   const handleInputChange = (field, value) => {
     setEditData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddressChange = (addressId, field, value) => {
+    setEditData(prev => ({
+      ...prev,
+      addresses: prev.addresses.map(addr =>
+        addr.id === addressId ? { ...addr, [field]: value } : addr
+      )
+    }));
+  };
+
+  const addNewAddress = () => {
+    const newAddress = {
+      id: Date.now(),
+      type: 'Weitere Adresse',
+      district: '',
+      city: '',
+      zip: '',
+      street: '',
+      isPrimary: false
+    };
+    setEditData(prev => ({
+      ...prev,
+      addresses: [...prev.addresses, newAddress]
+    }));
+  };
+
+  const removeAddress = (addressId) => {
+    setEditData(prev => ({
+      ...prev,
+      addresses: prev.addresses.filter(addr => addr.id !== addressId)
+    }));
+  };
+
+  const setPrimaryAddress = (addressId) => {
+    setEditData(prev => ({
+      ...prev,
+      addresses: prev.addresses.map(addr => ({
+        ...addr,
+        isPrimary: addr.id === addressId,
+        type: addr.id === addressId ? 'Hauptadresse' : 
+              addr.type === 'Hauptadresse' ? 'Weitere Adresse' : addr.type
+      }))
+    }));
   };
 
   const handleImageUpload = (e) => {
@@ -65,6 +109,8 @@ const Profile = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  const currentAddresses = isEditing ? editData.addresses : profileData.addresses;
 
   return (
     <div className="profile-container">
@@ -147,10 +193,10 @@ const Profile = () => {
                         <input
                           type="text"
                           value={editData.username}
-                          onChange={(e) => handleInputChange('nickname', e.target.value)}
+                          onChange={(e) => handleInputChange('username', e.target.value)}
                         />
                       ) : (
-                        <div className="input-display">{profileData.nickname}</div>
+                        <div className="input-display">{profileData.username}</div>
                       )}
                     </div>
                   </div>
@@ -172,7 +218,6 @@ const Profile = () => {
                 <div className="input-group">
                   <label>Passwort</label>
                   <div className="input-container">
-                    <span className="input-icon">🔒</span>
                     {isEditing ? (
                       <input
                         type="password"
@@ -223,64 +268,119 @@ const Profile = () => {
 
               {/* Address Information */}
               <div className="form-group">
-                <h3 className="section-title">Adresse</h3>
-                <div className="input-group">
-                  <label>Straße</label>
-                  <div className="input-container">
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editData.street}
-                        onChange={(e) => handleInputChange('street', e.target.value)}
-                      />
-                    ) : (
-                      <div className="input-display">{profileData?.adress?.street}</div>
-                    )}
-                  </div>
+                <div className="addresses-header">
+                  <h3 className="section-title">Adressen</h3>
+                  {isEditing && (
+                    <button 
+                      onClick={addNewAddress}
+                      className=" btn-add-address"
+                      type="button"
+                    >
+                      <span className="btn-icon">+</span>
+                      Weitere Adresse
+                    </button>
+                  )}
                 </div>
-                <div className="form-row address-row">
-                  <div className="input-group">
-                    <label>PLZ</label>
-                    <div className="input-container">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editData.zip}
-                          onChange={(e) => handleInputChange('zip', e.target.value)}
-                        />
-                      ) : (
-                        <div className="input-display">{profileData?.adress?.zip}</div>
-                      )}
+
+                <div className="addresses-container">
+                  {currentAddresses.map((address, index) => (
+                    <div key={address.id} className="address-card">
+                      <div className="address-card-header">
+                        <div className="address-title-section">
+                          <h4 className={`address-title ${address.isPrimary ? 'primary' : 'secondary'}`}>
+                            {address.type}
+                          </h4>
+                          {address.isPrimary && (
+                            <span className="primary-indicator">Hauptadresse</span>
+                          )}
+                        </div>
+                        {isEditing && currentAddresses.length > 1 && (
+                          <div className="address-controls">
+                            {!address.isPrimary && (
+                              <button
+                                onClick={() => setPrimaryAddress(address.id)}
+                                className="btn btn-primary-toggle"
+                                type="button"
+                              >
+                                Als Hauptadresse
+                              </button>
+                            )}
+                            <button
+                              onClick={() => removeAddress(address.id)}
+                              className="btn btn-address-remove"
+                              type="button"
+                              disabled={address.isPrimary}
+                              title={address.isPrimary ? "Hauptadresse kann nicht gelöscht werden" : "Adresse löschen"}
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="address-fields">
+                        <div className="input-group">
+                          <label>Straße & Hausnummer</label>
+                          <div className="input-container">
+                            {isEditing ? (
+                              <input
+                                type="text"
+                                value={address.street}
+                                onChange={(e) => handleAddressChange(address.id, 'street', e.target.value)}
+                              />
+                            ) : (
+                              <div className="input-display">{address.street}</div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="form-row address-row">
+                          <div className="input-group">
+                            <label>PLZ</label>
+                            <div className="input-container">
+                              {isEditing ? (
+                                <input
+                                  type="text"
+                                  value={address.zip}
+                                  onChange={(e) => handleAddressChange(address.id, 'zip', e.target.value)}
+                                />
+                              ) : (
+                                <div className="input-display">{address.zip}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="input-group">
+                            <label>Stadt</label>
+                            <div className="input-container">
+                              {isEditing ? (
+                                <input
+                                  type="text"
+                                  value={address.city}
+                                  onChange={(e) => handleAddressChange(address.id, 'city', e.target.value)}
+                                />
+                              ) : (
+                                <div className="input-display">{address.city}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="input-group">
+                            <label>Ortsteil</label>
+                            <div className="input-container">
+                              {isEditing ? (
+                                <input
+                                  type="text"
+                                  value={address.district}
+                                  onChange={(e) => handleAddressChange(address.id, 'district', e.target.value)}
+                                />
+                              ) : (
+                                <div className="input-display">{address.district}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="input-group">
-                    <label>Stadt</label>
-                    <div className="input-container">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editData.city}
-                          onChange={(e) => handleInputChange('city', e.target.value)}
-                        />
-                      ) : (
-                        <div className="input-display">{profileData?.adress?.city}</div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="input-group">
-                    <label>Bundesland</label>
-                    <div className="input-container">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editData.state}
-                          onChange={(e) => handleInputChange('state', e.target.value)}
-                        />
-                      ) : (
-                        <div className="input-display">{profileData?.adress?.state}</div>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>

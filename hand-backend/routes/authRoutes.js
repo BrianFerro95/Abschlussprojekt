@@ -1,8 +1,18 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import User from "../models/userSchema.js";
+
+import User from "../models/UserModel.js";
+import Event from "../models/eventModel.js"; // ← DIESE ZEILE HINZUFÜGEN
+
+import mongoose from "mongoose";
+import { userSchema } from "../models/userSchema.js";
+
 import { sendVerificationEmail } from "../utils/emailService.js";
 import { protect } from "../middleware/authMiddleware.js";
+
+// import User from "../models/UserModel.js"; // Auskommentiert, wir nutzen stattdessen userSchema.js
+// importiertes UserModel.js bleibt erhalten, aber wird nicht verwendet
+// const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 const router = express.Router();
 
@@ -38,83 +48,97 @@ const validateAddress = async (address) => {
  */
 router.post('/register', async (req, res) => {
   try {
+
     const {
       nickname,
       email,
       password,
       firstName,
       lastName,
-      adress // oder addresses, je nach Modell
+      addresses // Array!
     } = req.body;
 
-    // Prüfe ob User bereits existiert
-    const existingUser = await User.findOne({
-      $or: [{ email }, { nickname }, { username: nickname }]
-    });
 
+    // Prüfen, ob Nickname oder E-Mail schon vergeben sind
+    const existingUser = await User.findOne({ $or: [{ email }, { nickname }] });
     if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'E-Mail oder Nickname bereits registriert'
-      });
+      return res.status(400).json({ message: 'E-Mail oder Nickname bereits vergeben' });
     }
 
-    // Verifizierungstoken generieren
-    const verificationToken = jwt.sign(
-      { email, nickname },
-      process.env.JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+    // Optional: Adress-Validierung für alle Adressen im Array (deaktiviert)
+    /*
+    if (addresses && addresses.length > 0) {
+      for (const addr of addresses) {
+        const isValid = await validateAddress(addr);
+        if (!isValid) {
+          return res.status(400).json({
+            message: 'Eine eingegebene Adresse konnte nicht gefunden werden. Bitte überprüfen Sie Ihre Eingabe.',
+            hint: 'Falls Sie sicher sind, dass die Adresse korrekt ist, kontaktieren Sie den Support.'
+          });
+        }
+      }
+    }
+    */
+
 
     // User erstellen
     const user = new User({
-      username: nickname,
+      username: nickname, // Username immer setzen, z.B. auf Nickname
       nickname: nickname,
       email: email,
       password: password,
       firstName: firstName,
       lastName: lastName,
-      address: adress ? {
-        street: adress.street,
-        city: adress.city,
-        zip: adress.zip?.toString(),
-        district: adress.district,
-        state: adress.state
-      } : undefined,
+      addresses: addresses,
       isVerified: false,
       verificationToken: verificationToken,
       verificationTokenExpires: Date.now() + 24 * 60 * 60 * 1000,
       registeredAt: new Date()
     });
 
-    await user.save();
+    // Prüfen, ob schon ein Admin existiert (erster User wird Admin)
+    const adminExists = await User.findOne({ isAdmin: true });
 
-    // E-Mail-Versand
+
+    // Verifizierungscode generieren (6-stellig, als String)
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Neuen User anlegen
+    const newUser = new User({
+      nickname,
+      email,
+      password,
+      addresses,
+      isVerify: false,
+      verificationCode,
+      isAdmin: !adminExists,
+      // registeredAt: new Date() // entfernt für Kompatibilität mit Abschluss_Rea_02
+    });
+    await newUser.save();
+    console.log('👤 User gespeichert, versuche E-Mail zu senden...');
+
+    // Verifizierungs-E-Mail senden
     try {
-      await sendVerificationEmail(email, verificationToken);
+      console.log('📧 Rufe sendVerificationEmail auf...');
+      await sendVerificationEmail(newUser.email, newUser.verificationCode, newUser._id);
+      console.log('✅ E-Mail erfolgreich gesendet');
     } catch (emailError) {
-      console.error('❌ E-Mail-Service Fehler:', emailError);
+      console.error('❌ E-Mail-Versand fehlgeschlagen:', emailError.message);
     }
 
     res.status(201).json({
-      success: true,
-      message: 'Registrierung erfolgreich! Prüfen Sie die Backend-Console für den Verifizierungslink.',
-      verificationToken: verificationToken, // Nur für Development!
-      user: {
-        id: user._id,
-        username: user.username,
-        nickname: user.nickname,
-        email: user.email,
-        isVerified: user.isVerified
-      }
+      message: 'User erfolgreich erstellt',
+      _id: newUser._id,
+      nickname: newUser.nickname,
+      email: newUser.email,
+      addresses: newUser.addresses,
+      isAdmin: newUser.isAdmin,
+      isVerify: newUser.isVerify,
+      verificationCode: newUser.verificationCode // Nur für Testing - in Produktion entfernen!
     });
-
   } catch (error) {
-    console.error('❌ Register error:', error);
-    res.status(400).json({
-      success: false,
-      message: error.message || 'Fehler bei der Registrierung'
-    });
+    console.error('Fehler bei Registrierung:', error);
+    res.status(500).json({ message: 'Fehler bei der Registrierung', error: error.message });
   }
 });
 
@@ -135,8 +159,8 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Ungültige E-Mail oder Passwort" });
     }
 
-    // Prüfe E-Mail-Verifizierung
-    if (!user.isVerified) {
+    // Prüfe E-Mail-Verifizierung (mindestens eins der Felder muss true sein)
+    if (!(user.isVerified || user.isVerify)) {
       return res.status(401).json({ 
         message: "Bitte verifizieren Sie zuerst Ihre E-Mail-Adresse",
         requiresVerification: true,
@@ -165,8 +189,9 @@ router.post("/login", async (req, res) => {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        address: user.address,
-        isVerified: user.isVerified
+        addresses: user.addresses,
+        isVerified: user.isVerified,
+        registeredAt: user.registeredAt //HINZUFÜGEN
       },
     });
   } catch (error) {
@@ -323,36 +348,31 @@ router.get("/users", async (req, res) => {
 });
 
 /**
- * Passwort zurücksetzen (alternative Route für Team-Konsistenz)
+ * Events des eingeloggten Users abrufen (geschützt)
  */
-router.post("/reset-password", async (req, res) => {
-    try {
-        const { email, resetCode, newPassword } = req.body;
-        
-        // User finden und Code überprüfen
-        const user = await User.findOne({ 
-            email, 
-            resetCode,
-            resetCodeExpires: { $gt: Date.now() } // Code noch gültig
-        });
-        
-        if (!user) {
-            return res.status(400).json({ message: 'Ungültiger oder abgelaufener Code' });
-        }
+router.get("/users/me/events", protect, async (req, res) => {
+  try {
+    console.log('📥 GET /api/auth/users/me/events');
+    console.log('👤 User ID:', req.user._id);
 
-        // Neues Passwort setzen (wird automatisch gehashed durch das User-Schema)
-        user.password = newPassword;
-        user.resetCode = null;
-        user.resetCodeExpires = null;
-        await user.save();
+    // Finde alle Events, an denen der User teilnimmt
+    const events = await Event.find({
+      participants: req.user._id
+    }).populate('organizer', 'nickname firstName lastName');
 
-        res.json({ 
-            message: 'Passwort erfolgreich zurückgesetzt'
-        });
-    } catch (error) {
-        console.error('Reset password error:', error);
-        res.status(500).json({ message: 'Serverfehler beim Passwort zurücksetzen' });
-    }
+    console.log('📊 Found events:', events.length);
+    
+    res.json({
+      success: true,
+      events: events
+    });
+  } catch (error) {
+    console.error('❌ Error fetching user events:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Fehler beim Laden der Events'
+    });
+  }
 });
 
 export default router;

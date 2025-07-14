@@ -1,25 +1,25 @@
 import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
 
 // User-Schema Definition
 const userSchema = new mongoose.Schema(
   {
-    // Benutzername (Pflichtfeld, eindeutig, 3-20 Zeichen)
-    username: {
-      type: String,
-      required: [true, "Benutzername ist erforderlich"],
-      unique: true,
-      trim: true,
-      minlength: [3, "Benutzername muss mindestens 3 Zeichen haben"],
-      maxlength: [20, "Benutzername darf maximal 20 Zeichen haben"],
-    },
-
     // Nickname (Pflichtfeld, maximal 30 Zeichen)
     nickname: {
       type: String,
       required: [true, "Nickname ist erforderlich"],
       trim: true,
       maxlength: [30, "Nickname darf maximal 30 Zeichen haben"],
+    },
+
+    // Username (Pflichtfeld, eindeutig)
+    username: {
+      type: String,
+      required: [true, "Benutzername ist erforderlich"],
+      unique: true,
+      trim: true,
+      maxlength: [30, "Benutzername darf maximal 30 Zeichen haben"],
     },
 
     // E-Mail-Adresse (Pflichtfeld, eindeutig, validieren)
@@ -65,18 +65,17 @@ const userSchema = new mongoose.Schema(
     },
 
     // Profil-Felder
-    firstName: String,
-    lastName: String,
-    birthdate: Date,
-
-    // ✅ KORRIGIERTE ADRESSE mit allen Feldern:
-    address: {
-      street: String,
-      city: String,
-      zip: String, // ← Postleitzahl
-      state: String, // ← HINZUGEFÜGT: Bundesland
-      district: String, // ← HINZUGEFÜGT: Stadtteil/Landkreis
-    },
+    firstName: { type: String },
+    lastName: { type: String },
+    addresses: [
+      {
+        street: String,
+        city: String,
+        zip: String,
+        district: String,
+        state: String,
+      },
+    ],
   },
   { timestamps: true } // Erstellt automatisch createdAt und updatedAt Felder
 );
@@ -99,6 +98,8 @@ userSchema.pre("save", async function (next) {
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
+
+
 
 // User-Modell exportieren (verhindert Mehrfach-Registrierung bei Hot-Reload)
 const User = mongoose.models.User || mongoose.model("User", userSchema);
