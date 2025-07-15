@@ -8,7 +8,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
-    username: '',
+    nickname: '',
     password: '',
     email: ''
   });
@@ -34,12 +34,13 @@ function Login() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch('http://localhost:3000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nickname: formData.username,
-          password: formData.password
+          password: formData.password,
+          rememberMe: true // Optional, falls du eine "Angemeldet bleiben"-Funktion implementieren möchtest
         })
       });
 
@@ -56,7 +57,7 @@ function Login() {
       console.log('✅ Eingeloggt als:', data.user.nickname);
 
       // Weiterleitung nach Login
-      navigate('/dashboard'); // Passe das Ziel ggf. an
+      navigate('/profile'); // Passe das Ziel ggf. an
 
     } catch (err) {
       console.error('❌ Login-Fehler:', err.message);

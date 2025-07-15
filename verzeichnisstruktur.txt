@@ -1,0 +1,171 @@
+.
+|-- CommitMergeGithub.md
+|-- GithubBranches.md
+|-- GithubConflicts.md
+|-- README.md
+|-- hand-backend
+|   |-- API-RoutenTest.md
+|   |-- API.md
+|   |-- BackendREADME.md
+|   |-- MODEL.md
+|   |-- Passwort-Reset-Varianten.md
+|   |-- Registrierung-Login-Reset-Flow-TEAM-DOKU.md
+|   |-- Warum-laeuft-es-jetzt.md
+|   |-- database
+|   |   `-- database.js
+|   |-- debug-password-reset.js
+|   |-- debug-password-test.js
+|   |-- debug-users.js
+|   |-- middleware
+|   |   `-- authMiddleware.js
+|   |-- models
+|   |   |-- ExchangeModel.js
+|   |   |-- UserModel.js
+|   |   |-- adModel.js
+|   |   |-- blogCommentModel.js
+|   |   |-- blogModel.js
+|   |   |-- commentModel.js
+|   |   |-- eventCommentModel.js
+|   |   |-- eventModel.js
+|   |   |-- helpAnswerModel.js
+|   |   |-- helpQuestionModel.js
+|   |   |-- postModel.js
+|   |   `-- userSchema.js
+|   |-- package-lock.json
+|   |-- package.json
+|   |-- reset-passwords.js
+|   |-- routes
+|   |   |-- adRoutes.js
+|   |   |-- adressRoutes.js
+|   |   |-- authRoutes.js
+|   |   |-- blogCommentRoutes.js
+|   |   |-- blogRoutes.js
+|   |   |-- commentRoutes.js
+|   |   |-- eventCommentRoutes.js
+|   |   |-- eventRoutes.js
+|   |   |-- exchangeRoutes.js
+|   |   |-- forgotPasswordRoute.js
+|   |   |-- helpAnswerRoutes.js
+|   |   |-- helpQuestionRoutes.js
+|   |   |-- loginRoutes.js
+|   |   |-- passwordResetRequestRoute.js
+|   |   |-- passwordResetRoute.js
+|   |   |-- postRoutes.js
+|   |   |-- profileRoutes.js
+|   |   |-- publicUserRoutes.js
+|   |   |-- userRoutes.js
+|   |   `-- verifyRoutes.js
+|   |-- server.js
+|   |-- test-password-reset-fix.js
+|   |-- testung.md
+|   |-- token.md
+|   |-- utils
+|   |   |-- emailService.js
+|   |   `-- sendVerificationEmail.js
+|   |-- verify-all-users.js
+|   `-- verify-users.js
+|-- hand-frontend
+|   |-- README.md
+|   |-- eslint.config.js
+|   |-- index.html
+|   |-- package-lock.json
+|   |-- package.json
+|   |-- public
+|   |   `-- vite.svg
+|   |-- src
+|   |   |-- App.css
+|   |   |-- App.jsx
+|   |   |-- assets
+|   |   |   |-- 2 .jpg
+|   |   |   |-- animation
+|   |   |   |   |-- Animation - 1751891973276.json
+|   |   |   |   |-- Animation - error.json
+|   |   |   |   |-- Animation - events.json
+|   |   |   |   |-- Animation - frage.json
+|   |   |   |   |-- Animation - register.json
+|   |   |   |   `-- Animation - tauschen.json
+|   |   |   |-- carousel
+|   |   |   |   |-- image1.jpg
+|   |   |   |   |-- image2.jpg
+|   |   |   |   |-- image3.jpg
+|   |   |   |   |-- image4.jpg
+|   |   |   |   `-- image5.jpg
+|   |   |   |-- fotos
+|   |   |   |   |-- Damenfahrrad.jpeg
+|   |   |   |   |-- Werkzeug.jpeg
+|   |   |   |   |-- b�cherkiste.jpeg
+|   |   |   |   `-- kinderspielzeug.jpeg
+|   |   |   |-- landingphoto
+|   |   |   |   |-- landingphoto1.png
+|   |   |   |   |-- landingphoto2.png
+|   |   |   |   |-- landingphoto3.png
+|   |   |   |   |-- landingphoto4.png
+|   |   |   |   `-- landingphoto5.avif
+|   |   |   |-- logo.png
+|   |   |   |-- nachbarshaft.avif
+|   |   |   |-- personalphoto
+|   |   |   |   |-- Arben.png
+|   |   |   |   |-- Brian.png
+|   |   |   |   |-- Dagmar.png
+|   |   |   |   |-- Dominik.png
+|   |   |   |   |-- Nazli.png
+|   |   |   |   `-- Rea.avif
+|   |   |   |-- uberuns2.jpg
+|   |   |   |-- uberuns3.jpg
+|   |   |   `-- video
+|   |   |       `-- city.mp4
+|   |   |-- components
+|   |   |   |-- Footer.css
+|   |   |   |-- Footer.jsx
+|   |   |   |-- ForgotPassword.css
+|   |   |   |-- ForgotPassword.jsx
+|   |   |   |-- ImageCarousel.css
+|   |   |   |-- ImageCarousel.jsx
+|   |   |   |-- Navbar.css
+|   |   |   |-- Navbar.jsx
+|   |   |   |-- RegisterForm.css
+|   |   |   |-- RegisterForm.jsx
+|   |   |   |-- ResetPassword.css
+|   |   |   |-- ResetPassword.jsx
+|   |   |   `-- VerifyEmail.jsx
+|   |   |-- context
+|   |   |   `-- AuthContext.jsx
+|   |   |-- main.jsx
+|   |   `-- pages
+|   |       |-- Blog.css
+|   |       |-- Blog.jsx
+|   |       |-- EventDetail.css
+|   |       |-- EventDetail.jsx
+|   |       |-- EventRegister.css
+|   |       |-- EventRegister.jsx
+|   |       |-- Events.css
+|   |       |-- Events.jsx
+|   |       |-- Exchange
+|   |       |   |-- AuthContext.jsx
+|   |       |   |-- Exchange.css
+|   |       |   |-- Exchange.jsx
+|   |       |   |-- Hilfe.jsx
+|   |       |   |-- Suchen.jsx
+|   |       |   |-- Tauschen.jsx
+|   |       |   `-- Verschenken.jsx
+|   |       |-- Help.css
+|   |       |-- Help.jsx
+|   |       |-- Home copy.jsx
+|   |       |-- Home.jsx
+|   |       |-- LandingPage.css
+|   |       |-- LandingPage.jsx
+|   |       |-- Login.css
+|   |       |-- Login.jsx
+|   |       |-- PageNotFound.css
+|   |       |-- PageNotFound.jsx
+|   |       |-- Profile.css
+|   |       |-- Profile.jsx
+|   |       |-- Register.jsx
+|   |       |-- Uberuns.css
+|   |       `-- Uberuns.jsx
+|   `-- vite.config.js
+|-- package-lock.json
+|-- package.json
+`-- verzeichnisstruktur.txt
+
+387 directories, 2188 files  (ordner node_modules wird nicht aufgelistet)

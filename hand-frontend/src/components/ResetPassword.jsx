@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
 import './ResetPassword.css';
+import api from '../api'; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -30,9 +31,9 @@ export default function ResetPassword() {
     }
     setIsLoading(true);
     try {
-      const res = await api.post(`/auth/reset-password/${token}`, {
+      const res = await api.post(`/auth/password-reset`, { //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        resetCode: token, //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         newPassword: password,
-        confirmPassword: confirmPassword
       });
       // Axios: Antwortdaten sind unter res.data
       if (res.data && res.data.success) {

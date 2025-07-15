@@ -8,7 +8,7 @@ const router = express.Router();
  * Fügt dem eingeloggten User eine neue Adresse hinzu.
  * Erwartet die Adressdaten im Request-Body.
  */
-router.post('/users/me/adress', protect, async (req, res) => {
+router.post('/users/me/addresses', protect, async (req, res) => {
     try {
         const { firstName, lastName, street, zip, city, district, state } = req.body;
 
@@ -21,7 +21,7 @@ router.post('/users/me/adress', protect, async (req, res) => {
         const user = await User.findById(req.user._id);
         
         // Neue Adresse zum Array hinzufügen
-        user.adress.push({
+        user.addresses.push({
             firstName,
             lastName,
             street,
@@ -35,7 +35,7 @@ router.post('/users/me/adress', protect, async (req, res) => {
 
         res.status(201).json({ 
             message: 'Adresse erfolgreich hinzugefügt', 
-            adress: user.adress 
+            adresses: user.adresses 
         });
     } catch (error) {
         console.error('Fehler beim Hinzufügen der Adresse:', error);
@@ -50,7 +50,7 @@ router.post('/users/me/adress', protect, async (req, res) => {
  * Überschreibt ALLE Adressen des Users mit einer neuen Adresse.
  * Erwartet die Adressdaten im Request-Body.
  */
-router.put('/users/me/adress', protect, async (req, res) => {
+router.put('/users/me/adresses', protect, async (req, res) => {
     try {
         const { firstName, lastName, street, city, district, zip, state } = req.body;
 
@@ -60,7 +60,7 @@ router.put('/users/me/adress', protect, async (req, res) => {
 
         const user = await User.findByIdAndUpdate(
             req.user._id,
-            { adress: [{ 
+            { addresses: [{ 
                 firstName, 
                 lastName, 
                 street, 
@@ -72,7 +72,7 @@ router.put('/users/me/adress', protect, async (req, res) => {
             { new: true }
         );
 
-        res.json({ message: "Adresse aktualisiert", adress: user.adress });
+        res.json({ message: "Adresse aktualisiert", addresses: user.addresses });
     } catch (error) {
         console.error('Fehler beim Aktualisieren der Adresse:', error);
         res.status(500).json({ 
@@ -91,7 +91,7 @@ router.put('/users/me/adress/:index', protect, async (req, res) => {
         const user = await User.findById(req.user._id);
         const idx = parseInt(req.params.index, 10);
         
-        if (idx < 0 || idx >= user.adress.length) {
+        if (idx < 0 || idx >= user.addresses.length) {
             return res.status(404).json({ message: "Adresse nicht gefunden" });
         }
 
@@ -103,7 +103,7 @@ router.put('/users/me/adress/:index', protect, async (req, res) => {
         }
 
         // Adresse aktualisieren
-        user.adress[idx] = {
+        user.addresses[idx] = {
             firstName,
             lastName,
             street,
@@ -114,7 +114,7 @@ router.put('/users/me/adress/:index', protect, async (req, res) => {
         };
 
         await user.save();
-        res.json({ message: "Adresse aktualisiert", adress: user.adress });
+        res.json({ message: "Adresse aktualisiert", addresses: user.addresses });
     } catch (error) {
         console.error('Fehler beim Aktualisieren der Adresse:', error);
         res.status(500).json({ 
@@ -137,10 +137,10 @@ router.delete('/users/me/adress/:index', protect, async (req, res) => {
             return res.status(404).json({ message: "Adresse nicht gefunden" });
         }
 
-        user.adress.splice(idx, 1); // Adresse entfernen
+        user.addresses.splice(idx, 1); // Adresse entfernen
         await user.save();
         
-        res.json({ message: "Adresse gelöscht", adress: user.adress });
+        res.json({ message: "Adresse gelöscht", addresses: user.addresses });
     } catch (error) {
         console.error('Fehler beim Löschen der Adresse:', error);
         res.status(500).json({ 

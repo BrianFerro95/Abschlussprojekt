@@ -14,7 +14,7 @@ export async function protect(req, res, next) {
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Nicht autorisiert - Kein Token'
+      message: 'Nicht autorisiert' // Geänderte Fehlermeldung //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     });
   }
 
@@ -26,7 +26,7 @@ export async function protect(req, res, next) {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Nicht autorisiert - User nicht gefunden'
+        message: 'Nicht autorisiert' // Geänderte Fehlermeldung //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       });
     }
 
@@ -38,7 +38,7 @@ export async function protect(req, res, next) {
     }
     res.status(401).json({
       success: false,
-      message: 'Nicht autorisiert - Token ungültig'
+      message: 'Nicht autorisiert' // Geänderte Fehlermeldung //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     });
   }
 };

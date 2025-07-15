@@ -1,53 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Profile.css';
 
 const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    username: 'max_mustermann',
-    email: 'max.mustermann@email.com',
-    password: '••••••••••',
-    firstName: 'Max',
-    lastName: 'Mustermann',
-    profileImage: null,
-    addresses: [
-      {
-        id: 1,
-        type: 'Hauptadresse',
-        district: 'München Nord',
-        city: 'München',
-        zip: '80331',
-        street: 'Musterstraße 123',
-        isPrimary: true
-      }
-    ]
-  });
+  const [profileData, setProfileData] = useState(null); // Daten vom Server
+  const [editData, setEditData] = useState({});
 
-  const [editData, setEditData] = useState({ ...profileData, addresses: [...profileData.addresses] });
+  // Daten beim Laden holen
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token'); // Token dynamisch aus localStorage holen
+        if (!token) {
+          console.error("Kein Token gefunden, bitte erst einloggen!");
+          return;
+        }
+
+        const response = await fetch('http://localhost:3000/api/users/me', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Fehler beim Laden des Profils');
+        }
+        const data = await response.json();
+        setProfileData(data);
+        setEditData({
+          ...data,
+          addresses: data.addresses ? [...data.addresses] : []
+        });
+      } catch (error) {
+        console.error('Fehler beim Laden des Profils:', error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  if (!profileData) {
+    return <div>Lade Daten...</div>;
+  }
 
   const handleEdit = () => {
     setIsEditing(true);
-    setEditData({ 
-      ...profileData, 
-      addresses: profileData.addresses.map(addr => ({ ...addr }))
+    setEditData({
+      ...profileData,
+      addresses: profileData.addresses ? [...profileData.addresses] : []
     });
   };
 
   const handleSave = () => {
-    setProfileData({ 
-      ...editData, 
-      addresses: editData.addresses.map(addr => ({ ...addr }))
-    });
+    setProfileData({ ...editData });
     setIsEditing(false);
+    // Du solltest hier noch eine API-Anfrage machen, um Änderungen zu speichern!
   };
 
   const handleCancel = () => {
-    setEditData({ 
-      ...profileData, 
-      addresses: profileData.addresses.map(addr => ({ ...addr }))
-    });
+    setEditData({ ...profileData });
     setIsEditing(false);
   };
+
+  
 
   const handleInputChange = (field, value) => {
     setEditData(prev => ({ ...prev, [field]: value }));
@@ -91,20 +107,18 @@ const Profile = () => {
       addresses: prev.addresses.map(addr => ({
         ...addr,
         isPrimary: addr.id === addressId,
-        type: addr.id === addressId ? 'Hauptadresse' : 
-              addr.type === 'Hauptadresse' ? 'Weitere Adresse' : addr.type
+        type: addr.id === addressId ? 'Hauptadresse' :
+               addr.type === 'Hauptadresse' ? 'Weitere Adresse' : addr.type
       }))
     }));
   };
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
+    if (file && isEditing) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        if (isEditing) {
-          setEditData(prev => ({ ...prev, profileImage: e.target.result }));
-        }
+        setEditData(prev => ({ ...prev, profileImage: e.target.result }));
       };
       reader.readAsDataURL(file);
     }
@@ -284,7 +298,7 @@ const Profile = () => {
 
                 <div className="addresses-container">
                   {currentAddresses.map((address, index) => (
-                    <div key={address.id} className="address-card">
+                    <div key={address.id || index} className="address-card">
                       <div className="address-card-header">
                         <div className="address-title-section">
                           <h4 className={`address-title ${address.isPrimary ? 'primary' : 'secondary'}`}>

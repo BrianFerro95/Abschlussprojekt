@@ -4,6 +4,9 @@ import './RegisterForm.css';
 import logo from '../assets/logo.png';
 import register from '../assets/animation/Animation - register.json';
 import Lottie from 'lottie-react';
+
+
+
 const RegisterForm = ({ onSuccess }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -51,21 +54,22 @@ const RegisterForm = ({ onSuccess }) => {
     if (Object.keys(errors).length) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:5000/api/auth/register', {
+      const response = await fetch('http://localhost:3000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nickname: formData.nickname,
           email: formData.email,
           password: formData.password,
-          adress: {
-            firstName: formData.firstName,
+          firstName: formData.firstName,
             lastName: formData.lastName,
+          addresses: {
+            
             street: formData.street,
             city: formData.city,
             district: formData.district,
             state: formData.state,
-            zip: parseInt(formData.zip, 10),
+            zip: formData.zip, 
           },
         }),
       });

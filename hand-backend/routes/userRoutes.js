@@ -43,7 +43,7 @@ router.get('/users/:id', async (req, res) => {
  * Eigene Userdaten aktualisieren (geschützt)
  * Aktualisiert die Daten des eingeloggten Users
  */
-router.put('/me', protect, async (req, res) => {
+router.put('/users/me', protect, async (req, res) => { //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   try {
     const userId = req.user._id; // aus dem Token
     const updateData = req.body;

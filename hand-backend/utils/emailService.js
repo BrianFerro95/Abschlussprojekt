@@ -28,16 +28,15 @@ export const sendVerificationEmail = async (to, verificationCode, userId) => {
     if (process.env.NODE_ENV === 'development') {
       console.log('📧 DEVELOPMENT MODE - E-Mail würde gesendet werden:');
       console.log('🎯 An:', email);
-      console.log('🔗 Verifizierungslink:', `http://localhost:5173/verify/${verificationToken}`);
+      console.log('🔗 Verifizierungslink:', `http://localhost:5173/verify/${verificationCode}`);
       return {
         success: true,
         message: 'Development mode - E-Mail simuliert',
-        verificationLink: `http://localhost:5173/verify/${verificationToken}`
+        verificationLink: `http://localhost:5173/verify/${verificationCode}`
       };
     }
 
-    const transporter = createTransporter();
-    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify/${verificationToken}`;
+    const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify/${verificationCode}`; //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
     console.log('📧 Versuche E-Mail zu senden an:', to);
@@ -59,7 +58,7 @@ export const sendVerificationEmail = async (to, verificationCode, userId) => {
             <strong>${verificationCode}</strong>
           </div>
           <p>Oder klicke auf diesen Link, um deine E-Mail direkt zu bestätigen:</p>
-          <p><a href="http://localhost:4000/api/auth/verify-link?userId=${userId}&code=${verificationCode}" style="background-color: #4CAF50; 
+          <p><a href="${verificationLink}" style="background-color: #4CAF50; 
           color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
           E-Mail bestätigen</a></p>
           <p>Dieser Code ist 24 Stunden gültig.</p>
@@ -167,63 +166,11 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
                 Hand in Hand - Nachbarschaftshilfe<br>
                 Diese E-Mail wurde automatisch generiert.
               </p>
-              </div>
+            </div>
           </div>
         </div>
       `
     };
-
-    // const mailOptions = {
-    //   from: process.env.EMAIL_FROM,
-    //   to: email,
-    //   subject: '🔐 Passwort zurücksetzen - Hand in Hand',
-    //   html: `
-    //     <div style="max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; line-height: 1.6;">
-    //       <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-    //         <h1 style="color: white; margin: 0; font-size: 28px;">🔐 Passwort zurücksetzen</h1>
-    //       </div>
-    //       <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-    //         <p style="font-size: 16px; color: #333;">Hallo!</p>
-    //         <p style="font-size: 16px; color: #333;">
-    //           Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts für die <strong>Hand in Hand</strong> Plattform gestellt.
-    //         </p>
-    //         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
-    //           <p style="font-size: 16px; color: #333; margin-bottom: 8px;">Ihr persönlicher Sicherheits-Code:</p>
-    //           <span style="display: inline-block; font-size: 28px; letter-spacing: 4px; background: #e3e3e3; padding: 12px 32px; border-radius: 8px; font-weight: bold; color: #222; margin-bottom: 8px;">${resetToken}</span>
-    //           <p style="font-size: 13px; color: #888; margin-top: 8px;">Kopieren Sie diesen Code und geben Sie ihn im Browser ein, wenn Sie dem Link nicht trauen.</p>
-    //         </div>
-    //         <div style="text-align: center; margin: 30px 0;">
-    //           <a href="${resetLink}" 
-    //              style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-    //                     color: white; padding: 15px 30px; text-decoration: none; 
-    //                     border-radius: 25px; display: inline-block; font-weight: bold;
-    //                     font-size: 16px; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
-    //             🔑 Neues Passwort erstellen
-    //           </a>
-    //         </div>
-    //         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-    //           <p style="margin: 0; color: #666; font-size: 14px;">
-    //             <strong>⏰ Wichtig:</strong> Dieser Link und Code sind <strong>1 Stunde</strong> gültig.
-    //           </p>
-    //           <p style="margin: 0; color: #b00; font-size: 13px; margin-top: 8px;">
-    //             <strong>Sicherheitstipp:</strong> Geben Sie Ihren Code nur auf der offiziellen Hand-in-Hand-Seite ein und klicken Sie nur auf Links, denen Sie vertrauen.
-    //           </p>
-    //         </div>
-    //         <p style="color: #666; font-size: 14px;">
-    //           Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren. 
-    //           Ihr Passwort bleibt unverändert.
-    //         </p>
-    //         <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-    //         <div style="text-align: center;">
-    //           <p style="color: #999; font-size: 12px; margin: 0;">
-    //             Hand in Hand - Nachbarschaftshilfe<br>
-    //             Diese E-Mail wurde automatisch generiert.
-    //           </p>
-    //         </div>
-    //       </div>
-    //     </div>
-    //   `
-    // };
 
     const info = await usedTransporter.sendMail(mailOptions);
     console.log('E-Mail gesendet:', info.messageId);
