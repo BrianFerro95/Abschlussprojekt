@@ -18,6 +18,7 @@ import Blog from './pages/Blog';
 import Uberuns from './pages/Uberuns.jsx'; // Importiere die "Über uns" Seite
 import Footer from './components/Footer.jsx'; // Importiere den Footer
 import PageNotFound from './pages/PageNotFound.jsx'; // Importiere die 404-Seite
+import CreateEvent from './pages/CreateEvent.jsx'; // Importiere die Seite zum Erstellen von Events
 
 function App() {
   return (
@@ -30,9 +31,9 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/home" element={<Home />} />
- 
           <Route path="/help" element={<Help />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/create-event" element={<CreateEvent />} />
           <Route path="/events/:id" element={<EventDetail />} />
           <Route path="/events/:id/register" element={<EventRegister />} />
           <Route path="/profile" element={<Profile />} />

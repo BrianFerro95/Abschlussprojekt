@@ -1,8 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import './Navbar.css';
-import logo from '../assets/logo.png'; // Importiere das Logo, falls du es in der Navbar verwenden möchtest
+import logo from '../assets/logo.png';
 
 function Navbar() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    setIsLoggedIn(!!token);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+  };
+
   return (
     <nav className="navbar">
       <div className="navbar-container">
@@ -14,10 +26,20 @@ function Navbar() {
         <div className="nav-right-group">
           {/* Direkte Links: Register und Login (links in dieser Gruppe) */}
           <ul className="direct-nav-menu">
+            {/* Hier nur der Login/Logout Button */}
             <li className="nav-item">
-              <a href="/login" className="nav-links nav-links-primary">
-                Login
-              </a>
+              {isLoggedIn ? (
+                <button
+                  className="nav-links nav-links-primary"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              ) : (
+                <a href="/login" className="nav-links nav-links-primary">
+                  Login
+                </a>
+              )}
             </li>
           </ul>
 
@@ -30,34 +52,22 @@ function Navbar() {
             {/* Die versteckten Navigationslinks */}
             <ul className="burger-nav-menu">
               <li className="nav-item">
-                <a href="/home" className="nav-links">
-                  Home 
-                </a>
+                <a href="/home" className="nav-links">Home</a>
               </li>
               <li className='nav-item'>
-                <a href="/exchange" className="nav-links">
-                  Verschenken & Tauschen
-                </a>
+                <a href="/exchange" className="nav-links">Verschenken & Tauschen</a>
               </li>
               <li className="nav-item">
-                <a href="/events" className="nav-links">
-                  Events
-                </a>
+                <a href="/events" className="nav-links">Events</a>
               </li>
               <li className="nav-item">
-                <a href="/blog" className="nav-links">
-                  Blog
-                </a>
+                <a href="/blog" className="nav-links">Blog</a>
               </li>
               <li className="nav-item">
-                <a href="/help" className="nav-links">
-                  Hilfe & Support
-                </a>
+                <a href="/help" className="nav-links">Hilfe & Support</a>
               </li>
               <li className="nav-item">
-                <a href="/profile" className="nav-links">
-                  Profil
-                </a>
+                <a href="/profile" className="nav-links">Profil</a>
               </li>
             </ul>
           </div>

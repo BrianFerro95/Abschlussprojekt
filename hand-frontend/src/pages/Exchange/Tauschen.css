@@ -1,0 +1,89 @@
+/* Overlay für das Popup */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Das eigentliche Popup */
+.modal {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* FadeIn Animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Formular-Inputs im Popup */
+.modal input[type="text"],
+.modal textarea,
+.modal input[type="file"] {
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-family: "Nunito", sans-serif;
+  font-size: 1rem;
+}
+
+/* Buttons im Popup */
+.modal button {
+  padding: 10px 20px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.modal button[type="submit"] {
+  background-color: var(--bg-secondary);
+  color: #fff;
+}
+.modal button[type="submit"]:hover {
+  background-color: var(--deepBlue);
+}
+.modal button[type="button"] {
+  background-color: #ccc;
+}
+.modal button[type="button"]:hover {
+  background-color: #999;
+}
+
+/* Button für Angebot erstellen (größer, auffälliger) */
+.create-offer-btn {
+  display: block;
+  width: fit-content;
+  margin: 20px auto;
+  padding: 14px 24px;
+  font-size: 1.4rem;
+  background-color: var(--bg-secondary);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: background-color 0.3s, transform 0.2s;
+}
+.create-offer-btn:hover {
+  background-color: var(--deepBlue);
+  transform: translateY(-2px);
+}

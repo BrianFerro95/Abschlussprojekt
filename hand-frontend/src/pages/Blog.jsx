@@ -1,127 +1,33 @@
-import React, { useState } from 'react';
-import { Calendar, User, Search, Tag, PlusCircle, XCircle, MessageCircle, Send, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Calendar, User, Search, Tag, PlusCircle, XCircle } from 'lucide-react'; // XCircle für Schließen-Button im Popup
 import './Blog.css';
+import api from '../api'; // ggf. Pfad anpassen
+import { useNavigate } from "react-router-dom";
+
+// HIER EINFÜGEN:
+console.log("Blog.jsx aus pages ist aktiv!");
 
 const Blog = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('alle');
-  const [expandedComments, setExpandedComments] = useState({});
-  const [newComment, setNewComment] = useState({});
-  
-  const [comments, setComments] = useState({
-    1: [
-      {
-        id: 1,
-        author: "Klaus Müller",
-        content: "Tolle Idee! Wir sollten das auch in unserer Straße umsetzen.",
-        date: "2025-06-21",
-        replies: [
-          {
-            id: 2,
-            author: "Maria Grün",
-            content: "Gerne helfe ich euch dabei! Meldet euch einfach bei mir.",
-            date: "2025-06-21"
-          }
-        ]
-      },
-      {
-        id: 3,
-        author: "Susanne Berg",
-        content: "Wie habt ihr das mit den Genehmigungen gemacht?",
-        date: "2025-06-20",
-        replies: []
-      }
-    ],
-    2: [
-      {
-        id: 4,
-        author: "Peter Schmidt",
-        content: "Nachbarschaftshilfe ist wirklich wichtig. Danke für den Artikel!",
-        date: "2025-06-19",
-        replies: []
-      }
-    ]
-  });
-
-  const [blogPosts, setBlogPosts] = useState([
-    {
-      id: 1,
-      title: "Wie wir unseren Kiez grüner gemacht haben",
-      excerpt: "Ein Jahr lang haben wir gemeinsam daran gearbeitet, mehr Grün in unsere Straßen zu bringen. Hier ist unsere Geschichte...",
-      content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-      author: "Maria Grün",
-      date: "2025-06-20",
-      category: "umwelt",
-      readTime: "5 min",
-      image: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&h=300&fit=crop"
-    },
-    {
-      id: 2,
-      title: "Nachbarschaftshilfe in Zeiten des Wandels",
-      excerpt: "Warum gegenseitige Unterstützung wichtiger denn je ist und wie wir alle davon profitieren können.",
-      content: "In unserer schnelllebigen Zeit ist es wichtig, dass wir als Nachbarn zusammenhalten...",
-      author: "Thomas Hilfreich",
-      date: "2025-06-18",
-      category: "gemeinschaft",
-      readTime: "7 min",
-      image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=600&h=300&fit=crop"
-    },
-    {
-      id: 3,
-      title: "DIY-Tipps: Reparieren statt wegwerfen",
-      excerpt: "Einfache Anleitungen für alltägliche Reparaturen, die jeder zu Hause durchführen kann.",
-      content: "Nachhaltigkeit beginnt bei uns zu Hause. Mit diesen einfachen Tipps könnt ihr...",
-      author: "Anna Reparatur",
-      date: "2025-06-15",
-      category: "tipps",
-      readTime: "10 min",
-      image: "https://images.unsplash.com/photo-1581833971358-2c8b550f87b3?w=600&h=300&fit=crop"
-    },
-    {
-      id: 4,
-      title: "Erfolgsgeschichte: Unser Gemeinschaftsgarten",
-      excerpt: "Von der leeren Brachfläche zum blühenden Treffpunkt - wie aus einer Idee Realität wurde.",
-      content: "Es begann mit einer einfachen Idee: Was wäre, wenn wir die ungenutzte Fläche...",
-      author: "Familie Weber",
-      date: "2025-06-12",
-      category: "projekte",
-      readTime: "6 min",
-      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&h=300&fit=crop"
-    },
-    {
-      id: 5,
-      title: "Seniorenbetreuung: Ein Herzensprojekt",
-      excerpt: "Wie junge Familien und Senioren voneinander lernen und sich gegenseitig unterstützen können.",
-      content: "Generationenübergreifende Hilfe ist das Herzstück unserer Nachbarschaft...",
-      author: "Lisa Jung",
-      date: "2025-06-10",
-      category: "soziales",
-      readTime: "8 min",
-      image: "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=600&h=300&fit=crop"
-    },
-    {
-      id: 6,
-      title: "Lokale Geschäfte unterstützen",
-      excerpt: "Warum der Einkauf um die Ecke nicht nur praktisch ist, sondern auch unsere Gemeinschaft stärkt.",
-      content: "Jeder Euro, den wir in lokalen Geschäften ausgeben, kommt unserer Nachbarschaft zugute...",
-      author: "Peter Lokal",
-      date: "2025-06-08",
-      category: "wirtschaft",
-      readTime: "4 min",
-      image: "https://images.unsplash.com/photo-1556740758-90de374c12ad?w=600&h=300&fit=crop"
-    }
-  ]);
-
-  const [showWritePostPopup, setShowWritePostPopup] = useState(false);
-  const [newPost, setNewPost] = useState({
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [showWritePostPopup, setShowWritePostPopup] = useState(false); // Neuer Zustand für das Popup
+  const [newPost, setNewPost] = useState({ // Zustand für das neue Formular
     title: '',
     excerpt: '',
     content: '',
-    author: '',
-    category: 'umwelt',
+    category: 'umwelt', // Standardkategorie
     image: '',
     readTime: ''
   });
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    api.get("/blogs")
+      .then(res => setBlogPosts(res.data))
+      .catch(() => setBlogPosts([]));
+  }, []);
 
   const categories = [
     { value: 'alle', label: 'Alle Beiträge' },
@@ -134,9 +40,12 @@ const Blog = () => {
   ];
 
   const filteredPosts = blogPosts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.author.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      (post.title && post.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (post.excerpt && post.excerpt.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (typeof post.author === "object" &&
+        ((post.author.nickname && post.author.nickname.toLowerCase().includes(searchTerm.toLowerCase())) ||
+         (post.author.username && post.author.username.toLowerCase().includes(searchTerm.toLowerCase()))));
     const matchesCategory = selectedCategory === 'alle' || post.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -155,21 +64,21 @@ const Blog = () => {
   };
 
   const handleReadMore = (postId) => {
-    console.log(`"Weiterlesen" für Beitrag ID: ${postId} geklickt.`);
-    alert(`Artikel "${blogPosts.find(p => p.id === postId)?.title}" wird geladen.`);
+    navigate(`/blogs/${postId}`);
   };
 
   const handleWritePost = () => {
-    setShowWritePostPopup(true);
+    console.log('Popup öffnen');
+    
+    setShowWritePostPopup(true); // Popup öffnen
   };
 
   const handleClosePopup = () => {
-    setShowWritePostPopup(false);
-    setNewPost({
+    setShowWritePostPopup(false); // Popup schließen
+    setNewPost({ // Formular zurücksetzen
       title: '',
       excerpt: '',
       content: '',
-      author: '',
       category: 'umwelt',
       image: '',
       readTime: ''
@@ -184,89 +93,66 @@ const Blog = () => {
     }));
   };
 
-  const handleNewPostSubmit = (e) => {
-    e.preventDefault();
-    if (!newPost.title || !newPost.content || !newPost.author || !newPost.category) {
-      alert("Bitte füllen Sie alle erforderlichen Felder aus (Titel, Inhalt, Autor, Kategorie).");
-      return;
-    }
+  const handleNewPostSubmit = async (e) => {
+  e.preventDefault();
+  if (!newPost.title || !newPost.content || !newPost.category) {
+    alert("Bitte füllen Sie alle erforderlichen Felder aus (Titel, Inhalt, Kategorie).");
+    return;
+  }
 
-    const today = new Date();
-    const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-    const newBlogEntry = {
-      id: blogPosts.length > 0 ? Math.max(...blogPosts.map(post => post.id)) + 1 : 1,
-      ...newPost,
-      date: formattedDate,
-      image: newPost.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961c3e?w=600&h=300&fit=crop'
+  try {
+    const token = localStorage.getItem('token');
+    const blogData = {
+      title: newPost.title,
+      excerpt: newPost.excerpt,
+      content: newPost.content,
+      category: newPost.category,
+      readTime: newPost.readTime,
+      image: newPost.image
+      // author wird im Backend gesetzt!
     };
+    const response = await fetch('http://localhost:3000/api/blogs', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(blogData)
+    });
 
-    setBlogPosts(prevPosts => [newBlogEntry, ...prevPosts]);
+    if (!response.ok) throw new Error('Fehler beim Speichern des Blogposts');
+    const savedPost = await response.json();
+
+    setBlogPosts(prevPosts => [savedPost, ...prevPosts]);
     handleClosePopup();
     alert("Ihr Beitrag wurde erfolgreich hinzugefügt!");
-  };
+  } catch (error) {
+    alert("Fehler beim Speichern: " + error.message);
+  }
+};
 
-  // Kommentar-Funktionen
-  const toggleComments = (postId) => {
-    setExpandedComments(prev => ({
-      ...prev,
-      [postId]: !prev[postId]
-    }));
-  };
+  // const handleNewPostSubmit = (e) => {
+  //   e.preventDefault();
+  //   if (!newPost.title || !newPost.content || !newPost.author || !newPost.category) {
+  //     alert("Bitte füllen Sie alle erforderlichen Felder aus (Titel, Inhalt, Autor, Kategorie).");
+  //     return;
+  //   }
 
-  const handleCommentChange = (postId, value) => {
-    setNewComment(prev => ({
-      ...prev,
-      [postId]: {
-        ...prev[postId],
-        content: value
-      }
-    }));
-  };
+  //   const today = new Date();
+  //   const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-  const handleCommentAuthorChange = (postId, value) => {
-    setNewComment(prev => ({
-      ...prev,
-      [postId]: {
-        ...prev[postId],
-        author: value
-      }
-    }));
-  };
+  //   const newBlogEntry = {
+  //     id: blogPosts.length > 0 ? Math.max(...blogPosts.map(post => post.id)) + 1 : 1,
+  //     ...newPost,
+  //     date: formattedDate,
+  //     image: newPost.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961c3e?w=600&h=300&fit=crop' // Standardbild, wenn keines eingegeben wird
+  //   };
 
-  const submitComment = (postId) => {
-    const comment = newComment[postId];
-    if (!comment?.content?.trim() || !comment?.author?.trim()) {
-      alert("Bitte Name und Kommentar eingeben.");
-      return;
-    }
+  //   setBlogPosts(prevPosts => [newBlogEntry, ...prevPosts]); // Neuen Beitrag oben hinzufügen
+  //   handleClosePopup(); // Popup schließen und Formular zurücksetzen
+  //   alert("Ihr Beitrag wurde erfolgreich hinzugefügt!");
+  // };
 
-    const today = new Date();
-    const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-
-    const newCommentEntry = {
-      id: Date.now(),
-      author: comment.author,
-      content: comment.content,
-      date: formattedDate,
-      replies: []
-    };
-
-    setComments(prev => ({
-      ...prev,
-      [postId]: [...(prev[postId] || []), newCommentEntry]
-    }));
-
-    setNewComment(prev => ({
-      ...prev,
-      [postId]: { author: '', content: '' }
-    }));
-  };
-
-  const getCommentCount = (postId) => {
-    const postComments = comments[postId] || [];
-    return postComments.reduce((count, comment) => count + 1 + comment.replies.length, 0);
-  };
 
   return (
     <div className="blog-container">
@@ -307,27 +193,31 @@ const Blog = () => {
         <div className="blog-posts">
           {filteredPosts.length > 0 ? (
             filteredPosts.map(post => (
-              <article key={post.id} className="blog-card">
+              <article key={post._id} className="blog-card">
                 <div className="blog-image">
-                  <img src={post.image} alt={`Bild für den Beitrag: ${post.title}`} />
+                  {post.image && (
+                    <img src={post.image} alt={`Bild für den Beitrag: ${post.title}`} />
+                  )}
                   <div className="blog-category">
-                    {getCategoryLabel(post.category)}
+                    {getCategoryLabel(post.category || (post.tags && post.tags[0]))}
                   </div>
                 </div>
 
                 <div className="blog-content-area">
                   <h2 className="blog-title">{post.title}</h2>
-                  <p className="blog-excerpt">{post.excerpt}</p>
+                  <p className="blog-excerpt">{post.excerpt || post.description}</p>
 
                   <div className="blog-meta">
                     <div className="meta-left">
                       <div className="meta-item">
                         <User className="meta-icon" aria-hidden="true" />
-                        <span>{post.author}</span>
+                        <span>
+                          {post.author?.nickname || post.author?.username || "Unbekannt"}
+                        </span>
                       </div>
                       <div className="meta-item">
                         <Calendar className="meta-icon" aria-hidden="true" />
-                        <span>{formatDate(post.date)}</span>
+                        <span>{formatDate(post.createdAt || post.date)}</span>
                       </div>
                     </div>
                   </div>
@@ -335,86 +225,11 @@ const Blog = () => {
                   <div className="blog-actions">
                     <button
                       className="read-more-btn"
-                      onClick={() => handleReadMore(post.id)}
-                      aria-label={`Weiterlesen: ${post.title}`}
+                      onClick={() => handleReadMore(post._id)}
                     >
                       Weiterlesen
                     </button>
-                    
-                    <button
-                      className="comment-toggle-btn"
-                      onClick={() => toggleComments(post.id)}
-                      aria-label={`Kommentare anzeigen: ${post.title}`}
-                    >
-                      <MessageCircle className="comment-icon" aria-hidden="true" />
-                      <span>{getCommentCount(post.id)} Kommentare</span>
-                      {expandedComments[post.id] ? 
-                        <ChevronUp className="chevron-icon" aria-hidden="true" /> :
-                        <ChevronDown className="chevron-icon" aria-hidden="true" />
-                      }
-                    </button>
                   </div>
-
-                  {/* Kommentarsektion */}
-                  {expandedComments[post.id] && (
-                    <div className="comments-section">
-                      <h3 className="comments-title">Kommentare</h3>
-                      
-                      {/* Bestehende Kommentare */}
-                      <div className="comments-list">
-                        {comments[post.id] && comments[post.id].map(comment => (
-                          <div key={comment.id} className="comment">
-                            <div className="comment-header">
-                              <span className="comment-author">{comment.author}</span>
-                              <span className="comment-date">{formatDate(comment.date)}</span>
-                            </div>
-                            <p className="comment-content">{comment.content}</p>
-                            
-                            {/* Antworten */}
-                            {comment.replies.length > 0 && (
-                              <div className="comment-replies">
-                                {comment.replies.map(reply => (
-                                  <div key={reply.id} className="comment-reply">
-                                    <div className="reply-header">
-                                      <span className="reply-author">{reply.author}</span>
-                                      <span className="reply-date">{formatDate(reply.date)}</span>
-                                    </div>
-                                    <p className="reply-content">{reply.content}</p>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      
-                      {/* Neuer Kommentar */}
-                      <div className="new-comment-form">
-                        <h4 className="new-comment-title">Kommentar hinzufügen</h4>
-                        <input
-                          type="text"
-                          className="comment-author-input"
-                          placeholder="Dein Name"
-                          value={newComment[post.id]?.author || ''}
-                          onChange={(e) => handleCommentAuthorChange(post.id, e.target.value)}
-                        />
-                        <textarea
-                          className="comment-content-input"
-                          placeholder="Dein Kommentar..."
-                          value={newComment[post.id]?.content || ''}
-                          onChange={(e) => handleCommentChange(post.id, e.target.value)}
-                          rows="3"
-                        />
-                        <button
-                          className="comment-submit-btn"
-                          onClick={() => submitComment(post.id)}
-                        >
-                          <Send className="send-icon" aria-hidden="true" />
-                          Kommentar senden
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </article>
             ))
@@ -465,17 +280,21 @@ const Blog = () => {
               onClick={handleWritePost}
               aria-label="Neuen Blogbeitrag schreiben"
             >
-              <PlusCircle className="action-icon" aria-hidden="true" />
-              <span className="action-icon-text">Beitrag schreiben</span>
+              <PlusCircle className="action-icon" aria-hidden="true" style={{ marginRight: '6px' }} />
+              <span className='action-icon-text'>Beitrag schreiben</span>
             </button>
           </div>
         </aside>
       </div>
 
-      {/* Popup für neuen Beitrag */}
+      {/* Das Popup-Fenster */}
       {showWritePostPopup && (
         <div className="popup-overlay">
           <div className="popup-content">
+            {console.log('Popup Test')}
+            Test Popup
+            <h1>Test Popup Sichtbar</h1>
+            
             <button className="close-popup-btn" onClick={handleClosePopup} aria-label="Popup schließen">
               <XCircle size={24} />
             </button>
@@ -514,17 +333,6 @@ const Blog = () => {
                 ></textarea>
               </div>
               <div className="form-group">
-                <label htmlFor="post-author">Autor:</label>
-                <input
-                  type="text"
-                  id="post-author"
-                  name="author"
-                  value={newPost.author}
-                  onChange={handleNewPostChange}
-                  required
-                />
-              </div>
-              <div className="form-group">
                 <label htmlFor="post-category">Kategorie:</label>
                 <select
                   id="post-category"
@@ -532,7 +340,7 @@ const Blog = () => {
                   value={newPost.category}
                   onChange={handleNewPostChange}
                 >
-                  {categories.slice(1).map(category => (
+                  {categories.slice(1).map(category => ( // Alle außer "Alle Beiträge"
                     <option key={category.value} value={category.value}>
                       {category.label}
                     </option>
@@ -569,3 +377,4 @@ const Blog = () => {
 };
 
 export default Blog;
+
