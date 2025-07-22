@@ -1,11 +1,12 @@
 import express from 'express';
-import mongoose from 'mongoose';
-import User from '../models/UserModel.js'; // Geändeter Import //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+import User from '../models/UserModel.js';
 import { sendPasswordResetEmail } from '../utils/emailService.js';
+
+console.log("passwordResetRequestRoute.js wurde geladen");
 
 const router = express.Router();
 
-//Route für Password-Reset-Anfrage (6-stelliger Code)
+// Route für Password-Reset-Anfrage (6-stelliger Code)
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -33,6 +34,7 @@ router.post('/forgot-password', async (req, res) => {
 
     // E-Mail mit Reset-Code senden
     await sendPasswordResetEmail(user.email, resetCode);
+    console.log(`Reset-Code für ${user.email}: ${resetCode}`);
 
     res.status(200).json({ 
       success: true, 
@@ -48,3 +50,6 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 export default router;
+
+
+

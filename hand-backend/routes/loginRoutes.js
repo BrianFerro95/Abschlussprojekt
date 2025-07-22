@@ -34,12 +34,13 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Ungültige E-Mail oder Passwort' });
     }
     
+    
     console.log('✅ Login successful for:', user.nickname);
     
     const token = jwt.sign(
       { id: user._id, nickname: user.nickname },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: '7d' }
     );
     res.json({ 
       token,

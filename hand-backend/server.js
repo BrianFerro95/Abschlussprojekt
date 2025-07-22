@@ -3,24 +3,24 @@ import dotenv from "dotenv";
 import { fileURLToPath } from 'url';
 import path from 'path';
 // Dotenv zuerst laden
-dotenv.config();    //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
+dotenv.config();
 
 // // Debug: Überprüfe ob .env geladen wurde
 // console.log('🔧 .env loaded - MONGODB_URI exists:', !!process.env.MONGODB_URI);
 // console.log('🔧 PORT:', process.env.PORT);
 
 // SOFORT dotenv laden - vor allen anderen Imports
+dotenv.config();
 
 // Alle Standard-Imports
 import express from "express";
 import cors from "cors";
 import cookieParser from 'cookie-parser';
-// import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 // Alle Route-Imports 
 import connectDB from './database/database.js';
+import { userSchema } from "./models/userSchema.js";
 import authRoutes from './routes/authRoutes.js';
 import verifyRoutes from './routes/verifyRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
@@ -39,12 +39,12 @@ import helpAnswerRoutes from './routes/helpAnswerRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 
 
+const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
 
-connectDB();
-
-connectDB().catch(error => {
-  console.error('Datenbankverbindung fehlgeschlagen:', error);
-});
+// Registriere das User-Modell mit deinem Schema, falls noch nicht geschehen
+if (!mongoose.models.User) {
+  mongoose.model("User", userSchema);
+}
 
 // ES6 Module __dirname workaround
 const __filename = fileURLToPath(import.meta.url);
@@ -60,17 +60,19 @@ console.log('PORT:', process.env.PORT);
 
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-
-
+const PORT = process.env.PORT || 5000;
 
 // Stelle Verbindung zur Datenbank her
+connectDB();
 
 // Mongoose Debug-Modus aktivieren
 // mongoose.set('debug', true);
 
 // Middleware
-app.use(cors({}));
+app.use(cors({
+  origin: frontendUrl,
+  credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -81,7 +83,11 @@ app.use((req, res, next) => {
   next();
 });
 
-
+// Debug: Log alle eingehenden Requests
+app.use((req, res, next) => {
+    console.log(`📥 ${req.method} ${req.path}`, req.body);
+    next();
+});
 
 // Authentifizierungs-/Login-/Passwort-Routen
 app.use('/api/auth', authRoutes);
@@ -110,17 +116,8 @@ app.get('/', (req, res) => {
   res.send('Willkommen im "Hand in Hand"-Backend!');
 });
 
-// Error-Handling-Middleware (nach allen Routen!)
-app.use((err, req, res, next) => {
-  console.error(err.stack); // Log den Fehler auf der Serverseite
-  res.status(500).send('Etwas ist schiefgelaufen!'); // Sende eine generische Fehlermeldung an den Client !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-});
-
 // Starte den Server
 app.listen(PORT, () => {
   console.log(`🚀 Server läuft auf http://localhost:${PORT}`);
 });
 
-app.options('/api/auth/register', cors(), (req, res) => {
-  res.sendStatus(204); // No Content
-});
